@@ -1,8 +1,15 @@
+import { auth } from '@/firebase'
 import { registerSchema } from '@/lib/validation'
 import { useAuthState } from '@/stores/auth.store'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { createUserWithEmailAndPassword } from 'firebase/auth'
+import { AlertCircle } from 'lucide-react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { useNavigate } from 'react-router-dom'
 import { z } from 'zod'
+import FillLoading from '../shared/fill-loading'
+import { Alert, AlertDescription, AlertTitle } from '../ui/alert'
 import { Button } from '../ui/button'
 import {
 	Form,
@@ -17,17 +24,32 @@ import { Separator } from '../ui/separator'
 
 const Register = () => {
 	const { setAuth } = useAuthState()
+	const [loading, setLoading] = useState(false)
+	const [error, setError] = useState('')
+
+	const navigate = useNavigate()
 
 	const form = useForm<z.infer<typeof registerSchema>>({
 		resolver: zodResolver(registerSchema),
 		defaultValues: { email: '', password: '' },
 	})
-	const onSubmit = (values: z.infer<typeof registerSchema>) => {
+	const onSubmit = async (values: z.infer<typeof registerSchema>) => {
 		const { email, password } = values
+		setLoading(true)
+		try {
+			const res = await createUserWithEmailAndPassword(auth, email, password)
+			navigate('/')
+		} catch (error) {
+			const result = error as Error
+			setError(result.message)
+		} finally {
+			setLoading(false)
+		}
 	}
 
 	return (
 		<div className='flex flex-col'>
+			{loading && <FillLoading />}
 			<h2 className='text-xl font-bold'>Register</h2>
 			<p className='text-muted-foreground'>
 				Already have an account?
@@ -39,6 +61,13 @@ const Register = () => {
 				</span>
 			</p>
 			<Separator className='my-3' />
+			{error && (
+				<Alert variant='destructive'>
+					<AlertCircle className='h-4 w-4' />
+					<AlertTitle>Error</AlertTitle>
+					<AlertDescription>{error}</AlertDescription>
+				</Alert>
+			)}
 			<Form {...form}>
 				<form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
 					<FormField
@@ -48,7 +77,11 @@ const Register = () => {
 							<FormItem>
 								<FormLabel>Email address</FormLabel>
 								<FormControl>
-									<Input placeholder='example@gmail.com' {...field} />
+									<Input
+										placeholder='example@gmail.com'
+										disabled={loading}
+										{...field}
+									/>
 								</FormControl>
 								<FormMessage />
 							</FormItem>
@@ -62,7 +95,12 @@ const Register = () => {
 								<FormItem>
 									<FormLabel>Password</FormLabel>
 									<FormControl>
-										<Input placeholder='*****' type='password' {...field} />
+										<Input
+											placeholder='*****'
+											type='password'
+											disabled={loading}
+											{...field}
+										/>
 									</FormControl>
 									<FormMessage />
 								</FormItem>
@@ -75,7 +113,12 @@ const Register = () => {
 								<FormItem>
 									<FormLabel>Confirm Password</FormLabel>
 									<FormControl>
-										<Input placeholder='*****' type='password' {...field} />
+										<Input
+											placeholder='*****'
+											type='password'
+											disabled={loading}
+											{...field}
+										/>
 									</FormControl>
 									<FormMessage />
 								</FormItem>
@@ -83,7 +126,7 @@ const Register = () => {
 						/>
 					</div>
 					<div>
-						<Button type='submit' className='h-12 w-full'>
+						<Button type='submit' className='h-12 w-full' disabled={loading}>
 							Submit
 						</Button>
 					</div>
