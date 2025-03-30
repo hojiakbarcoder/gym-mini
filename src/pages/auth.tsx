@@ -9,9 +9,9 @@ const Auth = () => {
 	return (
 		<div
 			className='w-full h-screen bg-gradient-to-t from-foreground to-background
-	flex items-center justify-center'
+	flex items-center justify-center max-md: p-6'
 		>
-			<Card className='p-8 w-1/3 relative'>
+			<Card className='p-8 lg:w-1/3 md:w-1/2 w-full relative'>
 				{authState === 'login' && <Login />}
 				{authState === 'register' && <Register />}
 				<Social />

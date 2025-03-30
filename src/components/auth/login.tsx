@@ -1,6 +1,7 @@
 import { auth } from '@/firebase'
 import { loginSchema } from '@/lib/validation'
 import { useAuthState } from '@/stores/auth.store'
+import { useUserState } from '@/stores/user.store'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { signInWithEmailAndPassword } from 'firebase/auth'
 import { AlertCircle } from 'lucide-react'
@@ -28,6 +29,7 @@ const Login = () => {
 	const [error, setError] = useState('')
 
 	const navigate = useNavigate()
+	const { setUser } = useUserState()
 
 	const form = useForm<z.infer<typeof loginSchema>>({
 		resolver: zodResolver(loginSchema),
@@ -39,6 +41,7 @@ const Login = () => {
 		setLoading(true)
 		try {
 			const res = await signInWithEmailAndPassword(auth, email, password)
+			setUser(res.user)
 			navigate('/')
 		} catch (error) {
 			const result = error as Error
